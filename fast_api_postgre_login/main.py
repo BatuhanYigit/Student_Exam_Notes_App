@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 import psycopg2
+import pandas as pd
 
 app = FastAPI()
 
@@ -18,8 +19,10 @@ def read_items():
     results = cur.fetchall()
     return JSONResponse(content=results)
 
-@app.post("/items_add")
-def items_add():
-    cur = conn.cursor()
 
-    cur.execute("""INSERT INTO items (id,name,description) VALUES ('{id}', '{name}', '{description}')""")
+@app.get("/pandas")
+def get_items():
+    df = pd.read_sql("SELECT * FROM items", conn)
+    print(df)
+    return "welcome"
+
