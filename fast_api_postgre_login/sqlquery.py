@@ -10,4 +10,4 @@ check_login = """SELECT * FROM users WHERE username='{username}' AND password='{
 
 update_token = """UPDATE users SET token='{token}' WHERE username='{username}'"""
 
-check_token = """SELECT * FROM users WHERE token='{token}' """
+check_token = """SELECT * FROM users WHERE token='{token}'"""

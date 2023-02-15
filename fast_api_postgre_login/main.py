@@ -26,6 +26,8 @@ class User(BaseModel):
     username:str
     password:str
 
+class Token(BaseModel):
+    token:str
 
 
 def generate_token(username):
@@ -46,11 +48,23 @@ def check_token(token):
     return login_control
 
 @app.get("/user_table")
-def read_items():
+def read_items(token: Token):
     cur = conn.cursor()
-    cur.execute("SELECT * FROM users")
-    results = cur.fetchall()
-    return JSONResponse(content=results)
+    token_info = {
+
+        "token":token.token
+    }
+    print(token_info)
+    cur.execute(sqlquery.check_token.format(**token_info))
+    login_control = cur.fetchone()
+    print(login_control)
+    if login_control:
+        cur.execute("SELECT * FROM users")
+        results = cur.fetchall()
+        return JSONResponse(content=results)
+    else:
+        return "Wrong"
+
 
 @app.post("/register")
 async def create_user(user: User):
@@ -89,14 +103,13 @@ async def test_login(user: User):
     cur.execute(sqlquery.check_login.format(**login))
     login_control = cur.fetchone()
     print(login_control)
-    token_info = {
-
-        "username":username,
-        "token":token
-    }
     if login_control:
         token = generate_token(username)
-        cur.execute(sqlquery.update_token.format(**token_info))
+        token_test = {
+            "username":username,
+            "token":token
+        }
+        cur.execute(sqlquery.update_token.format(**token_test))
         conn.commit()
         return f"WELCOME {username} Access Token : {token}"
     else:
