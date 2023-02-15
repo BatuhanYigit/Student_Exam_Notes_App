@@ -5,6 +5,8 @@ import pandas as pd
 from pydantic import BaseModel
 import hashlib
 import sqlquery
+import string
+import secrets
 
 app = FastAPI()
 
@@ -16,9 +18,32 @@ conn = psycopg2.connect(
     password = 'postgres'
 )
 
+
+    
+
+
 class User(BaseModel):
     username:str
     password:str
+
+
+
+def generate_token(username):
+    alphabet = string.ascii_letters + string.digits
+    token = ''.join(secrets.choice(alphabet) for i in range(32))
+    hashed_token = hashlib.sha256((token+username).encode()).hexdigest()
+    return hashed_token
+
+def check_token(token):
+
+    token_info = {
+        "token":token
+    }
+
+    cur = conn.cursor()
+    cur.execute(sqlquery.check_login.format(**token_info))
+    login_control = cur.fetchone()
+    return login_control
 
 @app.get("/user_table")
 def read_items():
@@ -34,6 +59,7 @@ async def create_user(user: User):
     password = user.password
     hashed_password = hashlib.sha256(password.encode()).hexdigest()
     info ={
+
         "username":username,
         "password":hashed_password
 
@@ -58,11 +84,20 @@ async def test_login(user: User):
         "username":username,
         "password":hashed_password
     }
+    token = generate_token(username)
+
     cur.execute(sqlquery.check_login.format(**login))
     login_control = cur.fetchone()
     print(login_control)
+    token_info = {
 
+        "username":username,
+        "token":token
+    }
     if login_control:
-        return f"WELCOME {username}"
+        token = generate_token(username)
+        cur.execute(sqlquery.update_token.format(**token_info))
+        conn.commit()
+        return f"WELCOME {username} Access Token : {token}"
     else:
         return "Wrong"
