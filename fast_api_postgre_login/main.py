@@ -42,18 +42,27 @@ class Lesson_Create(BaseModel):
     exam_marks:int
 
 
+
 def generate_token(email):
     alphabet = string.ascii_letters + string.digits
     token = ''.join(secrets.choice(alphabet) for i in range(32))
     hashed_token = hashlib.sha256((token+email).encode()).hexdigest()
     return hashed_token
 
+def token_deneme(request,response):
+    bearer_token = request.headers.get("authorization", "")
+    token = bearer_token.split(' ')
+    token = token[1]
+    return(token)
+
+
 def token_control(request,response):
     bearer_token = request.headers.get("authorization", "")
     token = bearer_token.split(' ')
     if len(token) != 2:
         return "Hatalı token"
-
+    elif token is None:
+        return "Token Giriniz"
     token = token[1]
 
     now = datetime.datetime.now()
@@ -70,6 +79,7 @@ def token_control(request,response):
     cur.execute(sqlquery.check_token.format(**token_info))
     login_control = cur.fetchone()
     return(login_control)
+
 
 def letter_grade_check(exam_marks):
     if exam_marks > 79 and exam_marks <= 100:
@@ -111,7 +121,8 @@ def read_items(
             content={
             "data": [],
             "success": True,
-            "results":results
+            "results":results,
+            "token_control":token_control(request,response)
         })
     else:
         return "Tokenin tarihi geçmiş"
@@ -120,27 +131,30 @@ def read_items(
 
 @app.post("/register")
 async def create_user(user: User):
-    cur = conn.cursor()
-    email = user.email
-    password = user.password
-    role = user.role
-    hashed_password = hashlib.sha256(password.encode()).hexdigest()
-    info ={
+    try:
+        cur = conn.cursor()
+        email = user.email
+        password = user.password
+        role = user.role
+        hashed_password = hashlib.sha256(password.encode()).hexdigest()
+        info ={
 
-        "email":email,
-        "password":hashed_password,
-        "role":role
+            "email":email,
+            "password":hashed_password,
+            "role":role
 
-    }
-    
-    cur.execute(sqlquery.insert_data.format(**info))
-    conn.commit()
-    cur.execute("SELECT * FROM users")
-    results = cur.fetchall()
-    print("email : ",email)
-    print("Password : ",hashed_password)
-    conn.rollback()
-    return JSONResponse(content=results)
+        }
+        
+        cur.execute(sqlquery.insert_data.format(**info))
+        conn.commit()
+        cur.execute("SELECT * FROM users")
+        results = cur.fetchall()
+        print("email : ",email)
+        print("Password : ",hashed_password)
+        conn.rollback()
+        return JSONResponse(content=results)
+    except psycopg2.errors.UniqueViolation:
+        return "Mail adresi Kullanılmaktadır"
 
 @app.post("/login")
 async def test_login(login: Login):
@@ -187,3 +201,51 @@ def lesson_create(lesson_create:Lesson_Create):
     cur.execute(sqlquery.create_lesson.format(**create_lesson))
     conn.commit()
     return f"Kayıtlar girilmiştir {create_lesson}"
+
+@app.get("/check-lesson")
+def check_lesson(
+    request: Request,
+    response: Response
+):
+    cur = conn.cursor()
+   
+    if token_control(request,response):
+        token_info = {
+        "token":token_deneme(request,response)
+    }
+        cur.execute(sqlquery.check_email.format(**token_info))
+        email = cur.fetchall()
+        email = email[0][0]
+        email_info = {
+        "email":email
+        } 
+        cur.execute(sqlquery.check_lesson.format(**email_info))
+        results = cur.fetchall()
+        return JSONResponse(results)
+    else:
+        return "Tokenin Tarihi Geçmiş"
+
+@app.post("/update-lesson")
+def update_lesson(
+    request:Request,
+    response:Response,
+    lesson_update:Lesson_Create
+):
+    cur = conn.cursor()
+    email = lesson_update.email
+    lesson = lesson_update.lesson
+    exam_marks = lesson_update.exam_marks
+    letter_grade = letter_grade_check(exam_marks)
+    update_lesson = {
+        "email":email,
+        "lesson":lesson,
+        "exam_marks":exam_marks,
+        "letter_grade":letter_grade
+    }
+    if token_control(request,response):
+        cur.execute(sqlquery.update_lesson.format(**update_lesson))
+        conn.commit()
+        return f"Kayıtlar Güncellenmiştir {update_lesson}"
+    else:
+        return "Tokenin Tarihi Geçmiş Tekrar Login olun"
+
