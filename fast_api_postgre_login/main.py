@@ -46,7 +46,7 @@ def generate_token(email):
     hashed_token = hashlib.sha256((token+email).encode()).hexdigest()
     return hashed_token
 
-def token_deneme(request,response):
+def token_check(request,response):
     bearer_token = request.headers.get("authorization", "")
     token = bearer_token.split(' ')
     token = token[1]
@@ -112,7 +112,7 @@ def read_items(
 
 
     if token_control(request,response):
-        token = token_deneme(request,response)
+        token = token_check(request,response)
         role_info = {
             "token":token
         }
@@ -232,7 +232,7 @@ def check_lesson(
    
     if token_control(request,response):
         token_info = {
-        "token":token_deneme(request,response)
+        "token":token_check(request,response)
     }
         cur.execute(sqlquery.check_email.format(**token_info))
         email = cur.fetchall()
