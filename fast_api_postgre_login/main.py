@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, status
 from fastapi.responses import JSONResponse
 import psycopg2
 import pandas as pd
@@ -20,26 +20,23 @@ conn = psycopg2.connect(
     password = 'postgres'
 )
 
-
-    
-
-
 class User(BaseModel):
-    email:str
-    password:str
-    role:str
+    email: str
+    password: str
+    role: str
 
 class Login(BaseModel):
-    email:str
-    password:str
+    email: str
+    password: str
+
 
 class Token(BaseModel):
-    token:str
+    token: str
 
 class Lesson_Create(BaseModel):
-    email:str
-    lesson:str
-    exam_marks:int
+    email: str
+    lesson: str
+    exam_marks: int
 
 
 
@@ -60,14 +57,14 @@ def token_control(request,response):
     bearer_token = request.headers.get("authorization", "")
     token = bearer_token.split(' ')
     if len(token) != 2:
-        return "Hatalı token"
+        return False
     elif token is None:
-        return "Token Giriniz"
+        return False
     token = token[1]
 
     now = datetime.datetime.now()
 
-    print(token)
+    print("Token Test Printi : ",token)
     cur = conn.cursor()
     token_info = {
 
@@ -75,7 +72,7 @@ def token_control(request,response):
         "now":now
 
     }
-    print(token_info)
+    print("Token İnfo Test Printi : ",token_info)
     cur.execute(sqlquery.check_token.format(**token_info))
     login_control = cur.fetchone()
     return(login_control)
@@ -115,17 +112,41 @@ def read_items(
 
 
     if token_control(request,response):
-        cur.execute("SELECT * FROM users")
-        results = cur.fetchall()
+        token = token_deneme(request,response)
+        role_info = {
+            "token":token
+        }
+        cur.execute(sqlquery.check_role.format(**role_info))
+        role = cur.fetchall()
+        print("ROle -------------",role)
+        role = role[0][0]
+        if role == "Öğretmen":
+            cur.execute("SELECT * FROM users")
+            data = cur.fetchall()
+            return JSONResponse(
+                content={
+                "data": data,
+                "success": True,
+                "token_control":token_control(request,response),
+            })
+        else:
+            return JSONResponse(
+                content={
+                "data":[],
+                "success":False,
+                "msg":"Kullanıcı tablosunu sadece öğretmen görebilir."
+                }
+            )
+    else:
         return JSONResponse(
             content={
-            "data": [],
-            "success": True,
-            "results":results,
-            "token_control":token_control(request,response)
-        })
-    else:
-        return "Tokenin tarihi geçmiş"
+            "data":[],
+            "success":False,
+            "message":"Token Yanlış Veya Tarihi Dolmuş"
+            },
+            status_code = status.HTTP_403_FORBIDDEN
+            
+        )
 
 
 

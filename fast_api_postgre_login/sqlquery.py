@@ -14,4 +14,6 @@ check_lesson = """ SELECT * FROM lessons_notes WHERE email='{email}' """
 
 check_email = """SELECT email FROM users WHERE token ='{token}' """
 
+check_role = """SELECT role FROM users WHERE token = '{token}'"""
+
 update_lesson = """UPDATE lessons_notes SET exam_marks = '{exam_marks}', letter_grade = '{letter_grade}'  WHERE email = '{email}' and lesson='{lesson}'"""
