@@ -57,7 +57,6 @@ def check_register_date(email):
     else:
         difference = (now - register_date_difference).days
     # difference = (register_date_difference - now).days
-    print("FAAAAAAAAAAAAARK ",difference)
     if difference > 15:
         return "Kullanıcı {} gündür kayıtlı ve 15 günden uzun süredir kayıtlı. Kayıt tarihi = {}".format(difference,register_date)
     else:
@@ -87,7 +86,6 @@ def token_control(request,response):
 
     now = datetime.datetime.now()
 
-    print("Token Test Printi : ",token)
     cur = conn.cursor()
     token_info = {
 
@@ -95,7 +93,6 @@ def token_control(request,response):
         "now":now
 
     }
-    print("Token İnfo Test Printi : ",token_info)
     cur.execute(sqlquery.check_token.format(**token_info))
     login_control = cur.fetchone()
     return(login_control)
@@ -141,7 +138,6 @@ def read_items(
         }
         cur.execute(sqlquery.check_role.format(**role_info))
         role = cur.fetchall()
-        print("ROle -------------",role)
         role = role[0][0]
         if role == "Öğretmen":
             cur.execute("SELECT * FROM users")
@@ -193,14 +189,11 @@ async def create_user(user: User):
             "register_date":register_date
 
         }
-        print("REGİSTER DATE ********************** : ",register_date)
         
         cur.execute(sqlquery.insert_data.format(**info))
         conn.commit()
         cur.execute("SELECT * FROM users")
         results = cur.fetchall()
-        print("email : ",email)
-        print("Password : ",hashed_password)
         conn.rollback()
         return JSONResponse(content=results)
     except psycopg2.errors.UniqueViolation:
@@ -221,7 +214,6 @@ async def test_login(login: Login):
 
     cur.execute(sqlquery.check_login.format(**login))
     login_control = cur.fetchone()
-    print(login_control)
     if login_control:
         token = generate_token(email)
         token_test = {
@@ -276,7 +268,6 @@ def lesson_create(lesson_create:Lesson_Create,request:Request,response:Response)
         }
         cur.execute(sqlquery.check_role.format(**role_info))
         role = cur.fetchall()
-        print("ROle -------------",role)
         role = role[0][0]
         if role == "Öğretmen":
             cur.execute(sqlquery.create_lesson.format(**create_lesson))
