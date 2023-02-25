@@ -39,6 +39,29 @@ class Lesson_Create(BaseModel):
     exam_marks: int
 
 
+def check_register_date(email):
+    cur = conn.cursor()
+    register_info = {
+        "email":email
+    }
+    cur.execute(sqlquery.check_register_date.format(**register_info))
+    register_date = cur.fetchall()
+    register_date = register_date[0][0]
+    register_date_difference = register_date.split(' ')
+    register_date_difference = register_date_difference[0]
+    format = '%Y-%m-%d'
+    now = datetime.datetime.today() 
+    register_date_difference = datetime.datetime.strptime(register_date_difference, format)
+    if register_date_difference > now:
+        difference = (register_date_difference - now).days
+    else:
+        difference = (now - register_date_difference).days
+    # difference = (register_date_difference - now).days
+    print("FAAAAAAAAAAAAARK ",difference)
+    if difference > 15:
+        return "Kullanıcı {} gündür kayıtlı ve 15 günden uzun süredir kayıtlı. Kayıt tarihi = {}".format(difference,register_date)
+    else:
+        return("Kullanıcı {} Gündür kayıtlı. Kayıt Tarihi = {}".format(difference,register_date))
 
 def generate_token(email):
     alphabet = string.ascii_letters + string.digits
@@ -128,14 +151,17 @@ def read_items(
                 "data": data,
                 "success": True,
                 "token_control":token_control(request,response),
-            })
+            },
+            status_code = status.HTTP_200_OK
+            )
         else:
             return JSONResponse(
                 content={
                 "data":[],
                 "success":False,
                 "msg":"Kullanıcı tablosunu sadece öğretmen görebilir."
-                }
+                },
+                status_code = status.HTTP_401_UNAUTHORIZED
             )
     else:
         return JSONResponse(
@@ -158,13 +184,16 @@ async def create_user(user: User):
         password = user.password
         role = user.role
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
+        register_date = datetime.datetime.now()
         info ={
 
             "email":email,
             "password":hashed_password,
-            "role":role
+            "role":role,
+            "register_date":register_date
 
         }
+        print("REGİSTER DATE ********************** : ",register_date)
         
         cur.execute(sqlquery.insert_data.format(**info))
         conn.commit()
@@ -175,7 +204,7 @@ async def create_user(user: User):
         conn.rollback()
         return JSONResponse(content=results)
     except psycopg2.errors.UniqueViolation:
-        return "Mail adresi Kullanılmaktadır"
+        return "Mail adresi Kullanılmaktadır", status.HTTP_406_NOT_ACCEPTABLE
 
 @app.post("/login")
 async def test_login(login: Login):
@@ -200,14 +229,35 @@ async def test_login(login: Login):
             "token":token,
             "expire_time":expire_time
         }
+
         cur.execute(sqlquery.update_token.format(**token_test))
         conn.commit()
-        return f"WELCOME {email} Access Token : {token}"
+        data = check_register_date(email)
+        return JSONResponse(
+            content={
+            "Hoşgeldin":email,
+            "Access TOken":token,
+            "Kayıt":data,
+            "success":True
+            },
+            status_code = status.HTTP_200_OK
+        )
+        
     else:
-        return "Wrong"
+        msg = "Giriş Yapılamadı"
+        return JSONResponse(
+            content={
+            "msg":msg,
+            "success":False
+            },
+            status_code = status.HTTP_403_FORBIDDEN
+
+        )
 
 @app.post("/create_lesson")
-def lesson_create(lesson_create:Lesson_Create):
+def lesson_create(lesson_create:Lesson_Create,request:Request,response:Response):
+    
+    
     cur = conn.cursor()
     email = lesson_create.email
     lesson = lesson_create.lesson
@@ -219,9 +269,39 @@ def lesson_create(lesson_create:Lesson_Create):
         "exam_marks":exam_marks,
         "letter_grade":letter_grade
     }
-    cur.execute(sqlquery.create_lesson.format(**create_lesson))
-    conn.commit()
-    return f"Kayıtlar girilmiştir {create_lesson}"
+    if token_control(request,response):
+        token = token_check(request,response)
+        role_info = {
+            "token":token
+        }
+        cur.execute(sqlquery.check_role.format(**role_info))
+        role = cur.fetchall()
+        print("ROle -------------",role)
+        role = role[0][0]
+        if role == "Öğretmen":
+            cur.execute(sqlquery.create_lesson.format(**create_lesson))
+            conn.commit()
+            return f"Kayıtlar girilmiştir {create_lesson}"
+        else:
+            return JSONResponse(
+                content={
+                "data":[],
+                "success":False,
+                "msg":"Ders Girişini sadece öğretmen yapabilir"
+                },
+                status_code = status.HTTP_401_UNAUTHORIZED
+            )
+    else:
+        return JSONResponse(
+            content={
+            "data":[],
+            "success":False,
+            "message":"Token Yanlış Veya Tarihi Dolmuş"
+            },
+            status_code = status.HTTP_403_FORBIDDEN
+        )
+    
+
 
 @app.get("/check-lesson")
 def check_lesson(
