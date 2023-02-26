@@ -3,10 +3,10 @@ services:
 
   db:
     image: postgres
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: app_db
+    env_file: /home/batuhan/Documents/GitHub/Not_Uygulamasi/fast_api_postgre_login/local.env
+      # POSTGRES_USER: postgres
+      # POSTGRES_PASSWORD: postgres
+      # POSTGRES_DB: app_db
     ports:
       - "5432:5432"
     volumes:
@@ -15,6 +15,7 @@ services:
   web:
     container_name: web
     build: .
+    env_file: /home/batuhan/Documents/GitHub/Not_Uygulamasi/fast_api_postgre_login/local.env
     ports:
       - "8000:8000"
     volumes:

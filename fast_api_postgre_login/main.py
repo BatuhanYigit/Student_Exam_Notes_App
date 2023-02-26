@@ -8,16 +8,19 @@ import sqlquery
 import string
 import secrets
 import datetime
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 app = FastAPI()
 
 
 conn = psycopg2.connect(
-    host = 'db',
-    database = 'app_db',
-    user = 'postgres',
-    password = 'postgres'
+    host = os.getenv('POSTGRES_HOST'),
+    database = os.getenv('POSTGRES_DB'),
+    user = os.getenv('POSTGRES_USER'),
+    password = os.getenv('POSTGRES_PASSWORD'),
 )
 
 class User(BaseModel):
@@ -323,21 +326,58 @@ def update_lesson(
     response:Response,
     lesson_update:Lesson_Create
 ):
+    token = token_check(request,response)
     cur = conn.cursor()
     email = lesson_update.email
     lesson = lesson_update.lesson
     exam_marks = lesson_update.exam_marks
     letter_grade = letter_grade_check(exam_marks)
+
     update_lesson = {
         "email":email,
         "lesson":lesson,
         "exam_marks":exam_marks,
         "letter_grade":letter_grade
     }
+
     if token_control(request,response):
-        cur.execute(sqlquery.update_lesson.format(**update_lesson))
-        conn.commit()
-        return f"Kayıtlar Güncellenmiştir {update_lesson}"
+        role_info = {
+        "token":token
+        }
+        cur.execute(sqlquery.check_role.format(**role_info))
+        role = cur.fetchall()
+        role = role[0][0]
+        if role == "Öğretmen":
+
+            cur.execute(sqlquery.update_lesson.format(**update_lesson))
+            conn.commit()
+            # return f"Kayıtlar Güncellenmiştir {update_lesson}"
+            return JSONResponse(
+                content={
+                "data":update_lesson,
+                "success":True,
+                "msg":"Kayıtlar Güncellenmiştir."
+                },
+                status_code= status.HTTP_200_OK
+            )
+        else:
+            return JSONResponse(
+                content={
+                "data":[],
+                "success":False,
+                "msg":"Ders Girişini sadece öğretmen yapabilir"
+                },
+                status_code = status.HTTP_401_UNAUTHORIZED
+            )
     else:
-        return "Tokenin Tarihi Geçmiş Tekrar Login olun"
+        # return "Tokenin Tarihi Geçmiş Tekrar Login olun"
+        return JSONResponse(
+            content={
+            "data":[],
+            "msg":"Tokenin Tarihi Geçmiş",
+            "success":False
+            },
+            status_code= status.HTTP_400_BAD_REQUEST
+        )
+
 
