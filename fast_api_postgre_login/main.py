@@ -116,7 +116,7 @@ def letter_grade_check(exam_marks):
         return "DC"
     elif exam_marks > 34 and exam_marks <= 45:
         return "DD"
-    elif exam_marks > 0 and exam_marks <= 35:
+    elif exam_marks >= 0 and exam_marks <= 35:
         return "FF"
     else:
         return "Yanlış Not"
