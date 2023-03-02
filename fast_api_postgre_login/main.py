@@ -41,6 +41,13 @@ class Lesson_Create(BaseModel):
     lesson: str
     exam_marks: int
 
+def control_table_users():
+    cur = conn.cursor()
+    cur.execute(sqlquery.create_table_users)
+
+def control_table_lesson():
+    cur = conn.cursor()
+    cur.execute(sqlquery.create_table_lessons)
 
 def check_register_date(email):
     cur = conn.cursor()
@@ -131,6 +138,7 @@ def read_items(
     request: Request,
     response: Response,
 ):
+    control_table_users()
     cur = conn.cursor()
 
 
@@ -178,6 +186,7 @@ def read_items(
 @app.post("/register")
 async def create_user(user: User):
     try:
+        control_table_users()
         cur = conn.cursor()
         email = user.email
         password = user.password
@@ -204,6 +213,7 @@ async def create_user(user: User):
 
 @app.post("/login")
 async def test_login(login: Login):
+    control_table_users()
     cur = conn.cursor()
     email = login.email
     password = login.password
@@ -252,7 +262,7 @@ async def test_login(login: Login):
 @app.post("/create_lesson")
 def lesson_create(lesson_create:Lesson_Create,request:Request,response:Response):
     
-    
+    control_table_lesson()
     cur = conn.cursor()
     email = lesson_create.email
     lesson = lesson_create.lesson
@@ -302,6 +312,7 @@ def check_lesson(
     request: Request,
     response: Response
 ):
+    control_table_lesson()
     cur = conn.cursor()
    
     if token_control(request,response):
@@ -326,6 +337,7 @@ def update_lesson(
     response:Response,
     lesson_update:Lesson_Create
 ):
+    control_table_lesson()
     token = token_check(request,response)
     cur = conn.cursor()
     email = lesson_update.email
