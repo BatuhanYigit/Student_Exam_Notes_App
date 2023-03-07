@@ -262,7 +262,7 @@ async def test_login(login: Login):
 @app.post("/create_lesson")
 def lesson_create(lesson_create:Lesson_Create,request:Request,response:Response):
     
-    control_table_lesson()
+    # control_table_lesson()
     cur = conn.cursor()
     email = lesson_create.email
     lesson = lesson_create.lesson
@@ -285,7 +285,11 @@ def lesson_create(lesson_create:Lesson_Create,request:Request,response:Response)
         if role == "Öğretmen":
             cur.execute(sqlquery.create_lesson.format(**create_lesson))
             conn.commit()
-            return f"Kayıtlar girilmiştir {create_lesson}"
+            return JSONResponse(
+                content={
+                "data":create_lesson
+                }
+            )
         else:
             return JSONResponse(
                 content={
@@ -312,7 +316,7 @@ def check_lesson(
     request: Request,
     response: Response
 ):
-    control_table_lesson()
+    # control_table_lesson()
     cur = conn.cursor()
    
     if token_control(request,response):
@@ -337,7 +341,7 @@ def update_lesson(
     response:Response,
     lesson_update:Lesson_Create
 ):
-    control_table_lesson()
+    # control_table_lesson()
     token = token_check(request,response)
     cur = conn.cursor()
     email = lesson_update.email
