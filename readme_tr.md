@@ -2,23 +2,14 @@
 <h2>Kullanılan Teknolojiler</h2>
 </a>
 
-Vector Job birden fazla teknoloji ve araç kullanılarak oluşturulmuştur. Aşağıdaki teknolojiler ile Vector Job projesi geliştirilmiştir.
-
-* AWS (Amazon Web Services)
 * Docker
 * Docker Compose
-* NGINX
 * Git / Github (for easy deployment integration)
 * PostgreSQL
-* Django
 * Python
-* HTML / CSS / Javascript
-* Bash Script
-* uWSGI
+* Fastapi
 
 Docker kullanılarak geliştirilen Vector Job kolay ve kullanışlı bir CI/CD operasyon süreci sunmaktadır. Github ile entegre bir şekilde çalışan Docker, bir kaç komut ile test ortamından production ortamına entegre edilebilmektedir.
-
-AWS tarafında ise EC2 (Elastic Compute Cloud) ile beraber ( Ubuntu 22.04 LTS Server kullanılmıştır) bulut tabanlı bir sistem tasarlanmıştır. Docker ve Git / Github teknolojileri tarafından sağlanan kolay entegrasyon ile beraber Vector Job projesi yerel sunucularda veyahut dilediğiniz bir sunucuda çalışabilmektedir. Kurulum ile ilgili detaylı bilgi [kurulum](#setup) başlığı altında paylaşılacaktır.
 
 
 <a name="setup">
@@ -28,8 +19,8 @@ AWS tarafında ise EC2 (Elastic Compute Cloud) ile beraber ( Ubuntu 22.04 LTS Se
 Öncelikle projeyi indirmeniz ve proje dizinine gitmeniz gerekmektedir.
 
 ```bash
-git clone https://github.com/veyselaksin/vector-job.git
-cd vector-job
+git clone https://github.com/BatuhanYigit/Student_Exam_Notes_App
+cd Student_Exam_Notes_App
 ```
 
 Eğer projeyi yerel bir bilgisayarda başlatmak ve test etmek istiyorsanız aşağıdaki komut satırlarını çalıştırmanız gerekmektedir.
@@ -52,13 +43,5 @@ docker-compose up
 * <code>docker-compose run --rm app sh -c "python manage.py makemigrations"</code> komutu database modelleri üzerinde bir değişiklik, ekleme ve çıkarma yapıldığı zaman kullanılan bir komuttur. Eğer birden fazla veritabanı kullanıyorsanız lütfen kullanırken spesifik olarak veritabanını belirtiniz!
 * <code>docker-compose up</code> ise projenin ayağa kalkmasını sağlayan komuttur.
 
-Eğer projeyi yerel bir sunucuda başlatmak ve deploy etmek istiyorsanız aşağıdaki komut satırlarını çalıştırmanız gerekmektedir.
-
-```bash
-docker-compose -f docker-compose-prod.yml build
-docker-compose -f docker-compose-prod.yml run --rm app sh -c "python manage.py createsuperuser"
-docker-compose -f docker-compose-prod.yml run --rm app sh -c "python manage.py makemigrations"
-docker-compose -f docker-compose-prod.yml up -d
 ```
-
-Production mod üzerinde çalışırken <code> -f docker-compose-prod.yml </code> parametreleri eklenmiştir. "-f" ifadesi spesifik olarak bir dosyanın build edileceğini ifade etmektedir. Eğer production modda çalışmayacaksanız lütfen bu komut satırlarını kullanmayız.
+Projeyi Docker üzerinden ayağa kaldırdıktan sonra http://localhost:8000/docs üzerinden fastapinin bize sağladığı swagger üzerinden apileri kontrol edip database e erişebilirsiniz.
