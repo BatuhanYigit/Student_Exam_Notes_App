@@ -1,23 +1,3 @@
-
-# Vector Job
-
-Vector Job, Baykar Savunma Sanayisine başvuru çalışması olarak oluşturulmuştur. Birden fazla teknoloji ve yazılım araçları kullanılmıştır.
-
-## İçindekiler
-* [Vector Job Nedir?](#vectorjob)
-* [Kullanılan Teknolojiler](#tech)
-* [Kurulum](#setup)
-
-<a name="vectorjob">
-<h2>Vector Job Nedir?</h2>
-</a>
-
-Vector Job, kolayca iş bulabileceğiniz ve başvurularınızı yönetebileceğiniz, eğer bir yönetici iseniz iş ilanı açabileceğiniz bir iş arama platformudur. Kendinize uygun iş ilanlarını filtreleyerek iş akışınızda görüntüleyebilir ve beğendiğiniz bir veya birden fazla iş ilanına başvurabilirsiniz.
-
-**Not:** Kayıt olurken email adresinize bir aktivasyon linki gönderilecektir. Aktivasyon linkine tıklamadan hesabınız aktif olmayacaktır. Eğer mail'i görüntüleyemiyorsanız lütfen spam'ları da kontol etmeyi unutmayınız!
-
-<code>Vecor Job Web Sitesi: http://ec2-52-12-227-159.us-west-2.compute.amazonaws.com </code>
-
 <a name="tech">
 <h2>Kullanılan Teknolojiler</h2>
 </a>
